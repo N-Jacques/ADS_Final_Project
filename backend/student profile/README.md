@@ -20,7 +20,7 @@ Currently enrolled subjects work by:
   From that entry, it pulls the corresponding subject name (e.g., "Data Structures and Algorithms").
   This chain of checks allows the system to accurately translate a current semester into a list of specific, readable course titles.
 
-To work html extension should be changed into php tehn add the following to the top:
+To work html extension should be changed into php then add the following to the top:
 <?php 
 // This must be at the top of the file to ensure variables are defined
 require 'studentprofile.php'; 
