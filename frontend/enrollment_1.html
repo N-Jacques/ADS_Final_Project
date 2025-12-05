@@ -527,9 +527,12 @@
                 <tr>
                     <th>Action</th>
                     <th>SUBJECT CODE</th>
-                    <th>SECTION</th> <!--di ko alam if units ba isasama dit or types-->
+                    <th>SECTION</th>
                     <th>SUBJECT TITLE</th>
-                    <th>SCHEDULE</th> 
+                    <th>UNITS</th>
+                    <th>SCHEDULE</th>
+                    <th>ROOM</th>
+                    <th>AVAILABLE SLOTS</th>
                 </tr>
             </table>
 
@@ -539,72 +542,72 @@
             <div class="search-container">
 
                 <!-- Search input -->
-                <input type="text" class="search-input" placeholder="Search Subject...">
+                <input id="searchInput" type="text" class="search-input" placeholder="Search Subject..." onkeyup="filterTable()">
 
                 <!-- Search button -->
-                <button class="search-button">
+                <button class="search-button" onclick="filterTable()">
                     <img src="../assets/searchLogoBtn.png" alt="Search Icon">
                 </button>
 
                 <!-- Subject Type Dropdown -->
-                <select class="dropdown subject-dropdown">
+                <select id="subjectDropdown" class="dropdown subject-dropdown" onchange="filterTable()">
                     <option value="">Sub Type</option>
                     <option value="MIN">Minor</option>
                     <option value="MAJ">Major</option>
                 </select>
 
                 <!-- Semester Dropdown -->
-                <select class="dropdown semester-dropdown">
+                <select id="semesterDropdown" class="dropdown semester-dropdown" onchange="filterTable()">
                     <option value="">Sem</option>
-                    <option value="1st">First</option>
-                    <option value="2nd">Second</option>
-                    <option value="Mid">Midyear</option>
+                    <option value="20251">First</option>
+                    <option value="20252">Second</option>
+                    <option value="20253">Midyear</option>
                 </select>
 
                 <div class="noticeContainer">
-                        <p> NOTICE: You are not yet enrolled unless your subjects are already approved by the college department </p>
+                    <p> NOTICE: You are not yet enrolled unless your subjects are already approved by the college department </p>
                 </div>
 
             </div>
 
-            <!-- available subjects -->
-            <h3 style="margin-top: 30px;">AVAILABLE SUBJECTS</h3>
-            <table id="resultsTable">
-                <tr>
-                    <th>Action</th>
-                    <th>SUBJECT CODE</th>
-                    <th>SECTION</th>
-                    <th>SUBJECT TITLE</th> <!-- di ko alam if isasama ba to (based sa pics) or sundin table nila na semester ID -->
-                    <th>UNITS</th> <!-- di ko alam if isasama ba to (based sa pics) or sundin table nila na semester ID -->
-                    <th>SCHEDULE</th>
-                    <th>ROOM</th>
-                    <th>AVAILABLE SLOTS</th>
-                </tr>
 
-                <!-- sample -->
-                <tr>
-                    <td><button class="btn-add" onclick="addSubject(this)">ADD</button></td>
-                    <td>CS101</td>
-                    <td>1</td>
-                    <td>ADS</td>
-                    <td>3</td>
-                    <td>S 1:00–3:00</td>
-                    <td>GCA 307</td>
-                    <td>40</td>
-                </tr>
-                <tr>
-                    <td><button class="btn-add" onclick="addSubject(this)">ADD</button></td>
-                    <td>CS102</td>
-                    <td>1</td>
-                    <td>INFOMAN</td>
-                    <td>3</td>
-                    <td>W 1:00–3:00</td>
-                    <td>GV 301</td>
-                    <td>40</td>
-            
-                </tr>
-            </table>
+<!--available subjects-->
+ <h3 style="margin-top: 30px;">AVAILABLE SUBJECTS</h3>
 
+<table id="resultsTable">
+    <thead>
+        <tr>
+            <th>Action</th>
+            <th>SUBJECT CODE</th>
+            <th>SECTION</th>
+            <th>SUBJECT TITLE</th>
+            <th>UNITS</th>
+            <th>SCHEDULE</th>
+            <th>ROOM</th>
+            <th>AVAILABLE SLOTS</th>
+        </tr>
+    </thead>
+
+    <!--
+    <tbody id="resultsTableBody">
+        // AJAX will load results here 
+    </tbody>
+</table>-->
+
+<!--sample only-->
+<tbody id="resultsTableBody">
+    <tr>
+        <td><button class='btn-add' onclick="addSubject('<?php echo $sub_code; ?>')">ADD</button>
+        <td>CS101</td>
+        <td>1</td>
+        <td>ADS</td>
+        <td>3</td>
+        <td>S 1:00–3:00</td>
+        <td>GCA 307</td>
+        <td>40</td>
+    </tr>
+</tbody>
+</table>
             <button class="next-btn" onclick="nextStep()">NEXT</button>
 
         </div>
@@ -622,67 +625,164 @@
         </div>
     </div>
 
-    <script>
-        let currentStep = 1;
-        
-        function updateProgressBar() {
-            document.querySelectorAll(".step").forEach(s => {
-                s.classList.remove("active", "completed");
-            });
+<script>
+let currentStep = 1;
 
-            if (currentStep >= 1) document.getElementById("step1").classList.add(currentStep == 1 ? "active" : "completed");
-            if (currentStep >= 2) document.getElementById("step2").classList.add(currentStep == 2 ? "active" : "completed");
-            if (currentStep >= 3) document.getElementById("step3").classList.add(currentStep == 3 ? "active" : "completed");
+/* ================================
+   PROGRESS BAR FUNCTIONS
+================================ */
+function updateProgressBar() {
+    const steps = document.querySelectorAll(".step");
+    steps.forEach(step => step.classList.remove("active", "completed"));
 
-            const line = document.getElementById("line");
-            if (currentStep === 1) line.style.width = "0%";
-            if (currentStep === 2) line.style.width = "calc(50% - 50px)";
-            if (currentStep === 3) line.style.width = "calc(100% - 100px)";
-        }
+    if (currentStep >= 1) document.getElementById("step1").classList.add(currentStep === 1 ? "active" : "completed");
+    if (currentStep >= 2) document.getElementById("step2").classList.add(currentStep === 2 ? "active" : "completed");
+    if (currentStep >= 3) document.getElementById("step3").classList.add(currentStep === 3 ? "active" : "completed");
 
-        function nextStep() { window.location.href = "enrollment_2.html"; if (currentStep < 3) {
-                currentStep++;
-                updateProgressBar();
-            }
-        let currentStep = 1;}
+    const line = document.getElementById("line");
+    switch(currentStep) {
+        case 1: line.style.width = "0%"; break;
+        case 2: line.style.width = "calc(50% - 50px)"; break;
+        case 3: line.style.width = "calc(100% - 100px)"; break;
+    }
+}
 
+function nextStep() {
+    if (currentStep < 3) {
+        currentStep++;
         updateProgressBar();
+        window.location.href = "enrollment_2.html";
+    }
+}
 
-        function addSubject(btn) {
-            let row = btn.parentElement.parentElement;
-            
-            // pangkuha data sa tables para malagay sa approval table.
-            let subjectCode = row.cells[1].textContent;
-            let section = row.cells[2].textContent;
-            let subjectTitle = row.cells[3].textContent;
-            let schedule = row.cells[5].textContent;
-            
-            // approval table
-            let newRow = document.createElement("tr");
-            newRow.innerHTML = `
-                <td><button class='btn-remove' onclick='removeSubject(this)'>REMOVE</button></td>
-                <td>${subjectCode}</td>
-                <td>${section}</td>
-                <td>${subjectTitle}</td>
-                <td>${schedule}</td>
-            `;
-            
-            document.getElementById("approvalTable").appendChild(newRow);
+/* ================================
+   APPROVAL TABLE FUNCTIONS
+================================ */
+function addScheduleToApproval(btn) {
+    const row = btn.closest('tr');
+    const subjectCode = row.dataset.code;
+    const section = row.dataset.section;
+    const subjectTitle = row.dataset.title;
+    const units = row.dataset.units;
+    const dayTime = row.dataset.daytime;
+    const room = row.dataset.room;
+    const slots = row.dataset.slots;
+
+    // Check if this subject is already added
+    if (document.querySelector(`#approvalTable tr[data-code="${subjectCode}"]`)) {
+        alert("A schedule from this subject is already added.");
+        return;
+    }
+
+    const newRow = document.createElement("tr");
+    newRow.dataset.code = subjectCode; // so we can track removal
+    newRow.innerHTML = `
+        <td><button class='btn-remove' onclick='removeSubject(this)'>REMOVE</button></td>
+        <td>${subjectCode}</td>
+        <td>${section}</td>
+        <td>${subjectTitle}</td>
+        <td>${units}</td>
+        <td>${dayTime}</td>
+        <td>${room}</td>
+        <td>${slots}</td>
+    `;
+    document.getElementById("approvalTable").appendChild(newRow);
+
+    // Disable all ADD buttons for this subject in search table
+    document.querySelectorAll(`.schedule-row[data-code="${subjectCode}"] .btn-add`).forEach(b => b.disabled = true);
+}
+
+
+function removeSubject(btn) {
+    const row = btn.closest('tr');
+    const subjectCode = row.dataset.code;
+
+    // Remove the row
+    row.remove();
+
+    // Re-enable ADD buttons for that subject
+    document.querySelectorAll(`.schedule-row[data-code="${subjectCode}"] .btn-add`).forEach(b => b.disabled = false);
+}
+
+
+/* ================================
+   TOGGLE SCHEDULE DISPLAY
+================================ */
+function toggleSchedules(btn) {
+    const mainRow = btn.closest('tr');
+    let next = mainRow.nextElementSibling;
+    const isHidden = next && next.style.display === 'none';
+
+    while(next && next.classList.contains('schedule-row')) {
+        next.style.display = isHidden ? 'table-row' : 'none';
+        next = next.nextElementSibling;
+    }
+
+    btn.textContent = isHidden ? '−' : '+';
+}
+
+/* ================================
+   LIVE SEARCH + FILTER
+================================ */
+function loadSubjects(searchValue = '') {
+    const formData = new FormData();
+    formData.append('query', searchValue);
+
+    fetch('../backend/search/search.php', { method: 'POST', body: formData })
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('resultsTableBody').innerHTML = html;
+            addToggleListeners(); // re-add toggle for new rows
+            filterTable();
+        })
+        .catch(err => console.error("Error fetching subjects:", err));
+}
+
+function filterTable() {
+    const searchValue = document.getElementById("searchInput").value.toLowerCase();
+    const subType = document.getElementById("subjectDropdown").value.toLowerCase();
+    const semester = document.getElementById("semesterDropdown").value.toLowerCase();
+
+    document.querySelectorAll("#resultsTableBody tr.subject-row").forEach(row => {
+        const textMatch = row.textContent.toLowerCase().includes(searchValue);
+        const typeMatch = !subType || row.dataset.subtype?.toLowerCase() === subType;
+        const semesterMatch = !semester || row.dataset.semester?.toLowerCase() === semester;
+
+        const show = textMatch && typeMatch && semesterMatch;
+        row.style.display = show ? "" : "none";
+
+        // hide schedule rows
+        let next = row.nextElementSibling;
+        while(next && next.classList.contains('schedule-row')) {
+            next.style.display = 'none';
+            next = next.nextElementSibling;
         }
+    });
+}
 
-        /* remove subject */
-        function removeSubject(btn) {
-            btn.parentElement.parentElement.remove();
-        }
+/* ================================
+   ADD TOGGLE LISTENERS
+================================ */
+function addToggleListeners() {
+    document.querySelectorAll('.toggle-schedules').forEach(btn => {
+        btn.addEventListener('click', () => toggleSchedules(btn));
+    });
+}
 
-        // TAB BUTTONS
-        function openProfile() { window.location.href = "studentProfile.html"; }
-        function openGrades() { window.location.href = "viewGrades.html"; }
-        function openEnrollment() { window.location.href = "enrollment_1.html"; }
-        function openSignoutPopup() { document.getElementById("signoutPopup").style.display = "flex"; }
-            function closePopup() { document.getElementById("signoutPopup").style.display = "none"; }    
-            function confirmSignout() { window.location.href = "logIn_noPass.html"; }    
-    </script>
+/* ================================
+   INITIALIZATION
+================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    updateProgressBar();
+    loadSubjects();
+
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        loadSubjects(this.value);
+    });
+    document.getElementById('subjectDropdown').addEventListener('change', filterTable);
+    document.getElementById('semesterDropdown').addEventListener('change', filterTable);
+});
+</script>
 
 </body>
 </html>
