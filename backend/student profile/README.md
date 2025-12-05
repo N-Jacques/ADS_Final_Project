@@ -1,6 +1,6 @@
 NOTES:
 
-- Student ID value is hardcoded but everything is fetched using the provided student id (need to be updated into automatically fetching when logging in by checking the credentials cross referencing it for its student_id).
+- Student ID value is hardcoded but everything is fetched using the provided student id (needed to be updated into automatically fetching when logging in by checking the credentials cross referencing it for its student_id).
 
 Currently enrolled subjects work by:
 
