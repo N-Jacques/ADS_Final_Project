@@ -1,39 +1,45 @@
 <?php
-//database credentials
+session_start(); //
+
+// Database credentials
 $host = 'localhost';
-$dbname = 'ads';
+$dbname = 'adsDB';
 $username = 'root';
 $password = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // 1. Get the Input
+    // MAKE SURE your HTML input has name="studentid"
     $studentID = trim($_POST['studentid']);
-    /*debugging line - remove in final
-    echo "Trying to find student ID: [$studentID]<br>";*/
 
     try {
-        //connect to db
         $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        //prepare query
+        // 2. Query the 'credentials' table
         $stmt = $conn->prepare("SELECT * FROM credentials WHERE student_id = :studentid");
         $stmt->bindParam(":studentid", $studentID);
         $stmt->execute();
 
-        //check if student exists
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
         if ($row) {
-            // Student found, redirect to student profile page (html)
-            header("Location: /ADS_Final_Project/frontend/studentProfile.html?id=" . urlencode($studentID));
-            /*debugging line
-            echo "Student found: " . $row['student_id'];*/
+            // 3. Login Success
+            
+            // --- THE FIX 1: Save to Session (Fixes "didn't fetch details") ---
+            $_SESSION['student_id'] = $row['student_id'];
+            $_SESSION['user_role'] = 'student'; 
+            // --------------------------------
+
+            // --- THE FIX 2: Use Absolute Path (Fixes "Not Found" error) ---
+            // We use the path that worked in your previous version
+            header("Location: /ADS_Final_Project/frontend/studentProfile.html");
             exit();
         } else {
-            // Student not found, show error message
-            /*debugging line
-            echo "Invalid Credentials! RowCount: " . $stmt->rowCount();*/
+            // 4. Login Failed
             echo "<script>
-                alert('Invalid Credentials! Please try again.');
+                alert('Invalid Student ID! Please try again.');
+                // Use Absolute Path here too
                 window.location.href = '/ADS_Final_Project/frontend/logIn_noPass.html';
             </script>";
             exit();

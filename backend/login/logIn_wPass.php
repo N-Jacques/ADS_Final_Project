@@ -1,7 +1,11 @@
 <?php
+
+//start session
+session_start();
+
 //database credentials
 $host = 'localhost';
-$dbname = 'ads';
+$dbname = 'adsDB';
 $username = 'root';
 $password = '';
 
@@ -16,9 +20,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         //connect to db
         $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+        //handle db error
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        //prepare query
+        //prepare query then execute
         $stmt = $conn->prepare("SELECT * FROM credentials WHERE student_id = :studentid
                                 AND passkey = :passkey_");
         $stmt->bindParam(":studentid", $studentID);
@@ -28,7 +33,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         //check if student account exists
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row) {
-            // Student found, redirect to student profile page (html)
+            
+            // Store data in session 
+            $_SESSION['student_id'] = $row['student_id'];
+            $_SESSION['user_role'] = 'student'; // Helpful for role-based access checks
+
+
+            // Redirect to student profile page (html)
             header("Location: /ADS_Final_Project/frontend/studentProfile.html?id=" . urlencode($studentID));
             /*debugging line
             echo "Student found: " . $row['student_id'];*/
