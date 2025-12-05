@@ -157,16 +157,37 @@
     <div class="login-card">
         <h1>Log in</h1>
 
-        <label>Student no.</label>
-        <input type="text" placeholder ="ex. 2023*****" class="input-field">
+         <!-- ORIGINAL CODE: REVIEW CHANGES BEFORE DELETING!
+              <label>Student no.</label>
+              <input type="text" placeholder ="ex. 2023*****" class="input-field">
+              
+              <label>Password</label>
+              <input type="password"  class="input-field">
+              <button class="login-btn" onclick="openProfile()">Log in</button>
+         -->       
 
-        <label>Password</label>
-        <input type="password"  class="input-field">
-        
-        <button class="login-btn" onclick="openProfile()">Log in</button>
+
+         <!-- NOTE: REPLACE the destination of studentProfile TO login_wPass
+              when logOut() is called if you will proceed with the login_wPass -->
+        <form action = "/ADS_Final_Project/backend/login/logIn_wPass.php"
+              method = "POST">
+
+            <label>Student no.</label>
+            <input type="text"      placeholder ="ex. 2023*****" 
+                   name="studentid" class="input-field"
+                   required>
+
+            <label>Password</label>
+            <input type="password"      placeholder ="*********" 
+                   name="passkey_" class="input-field"
+                   required>
+            <button class="login-btn" type="submit">Log in</button>
+        </form>
+
     </div>
 
     <script>
+        //keep the functions for debugging purposes, remove unused in final version
         function openPlmWeb() { location.href = "https://plm.edu.ph/studentinfosys"; }
         function openProfile() { window.location.href = "studentProfile.html"; }
     </script>
