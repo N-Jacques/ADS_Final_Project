@@ -157,18 +157,33 @@
     <div class="login-card">
         <h1>Log in</h1>
 
-        <label>Student no.</label>
-        <input type="text" placeholder ="ex. 2023*****" class="input-field">
+        <!-- ORIGINAL CODE: REVIEW CHANGES BEFORE DELETING!
+             <label>Student no.</label>
+             <input type="text" placeholder ="ex. 2023*****" class="input-field">
+             <button class="login-btn" onclick="openProfile()">Log in</button>
+        -->
+                
+        <!-- FORM wrapper for the input field and button to link to PHP file 
+             Please ensure that the action path is correct as in your projectFile 
+             directory within htdocs folder
+        -->
+        <form action = "/ADS_Final_Project/backend/login/logIn_noPass.php"
+              method = "POST">
 
-        <label>Password</label>
-        <input type="password"  class="input-field">
-        
-        <button class="login-btn" onclick="openProfile()">Log in</button>
+            <label>Student no.</label>
+            <input type="text"      placeholder ="ex. 2023*****" 
+                   name="studentid" class="input-field"
+                   required>
+
+            <button class="login-btn" type="submit">Log in</button>
+        </form>
+
     </div>
 
     <script>
+        //keep the functions for debugging purposes, remove unused in final version
         function openPlmWeb() { location.href = "https://plm.edu.ph/studentinfosys"; }
-        function openProfile() { window.location.href = "STUDENT PROFILE.html"; }
+        function openProfile() { window.location.href = "studentProfile.html"; }
     </script>
 
 </body>
