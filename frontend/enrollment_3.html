@@ -385,16 +385,16 @@
 
 
         /* Hide everything except #printContainer when printing */
-    @media print {
-        body > *:not(#printContainer) {
-            display: none;
+        @media print {
+            body > *:not(#printContainer) {
+                display: none;
+            }
+            #printContainer {
+                display: block !important;
+                position: static !important;
+                width: 100%;
+            }
         }
-        #printContainer {
-            display: block !important;
-            position: static !important;
-            width: 100%;
-        }
-    }
 </style>
 
 <body>
@@ -600,40 +600,190 @@ function openPrintPreview(data) {
             <td>${s.units}</td>
             <td>${s.section}</td>
             <td>${s.schedule.join(', ')}</td>
-            <td>${[...s.rooms].join(', ')}</td> <!-- Rooms displayed here -->
+            <td>${[...s.rooms].join(', ')}</td>
         </tr>
     `).join('');
 
-    container.innerHTML = `
-        <div class="print-form">
-            <h2>PLM Registration Form</h2>
-            <p><strong>Name:</strong> ${data.header.full_name}</p>
-            <p><strong>Student ID:</strong> ${data.header.student_id}</p>
-            <p><strong>Course:</strong> ${data.header.course}</p>
-            <p><strong>Year Level:</strong> ${data.header.year_level}</p>
-            <p><strong>Semester:</strong> ${data.header.sem_id}</p>
+container.innerHTML = `
+    <style>
+        @media print {
 
-            <table border="1" cellspacing="0" cellpadding="5">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Title</th>
-                        <th>Units</th>
-                        <th>Section</th>
-                        <th>Schedule</th>
-                        <th>Room</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${subjectRows}
-                </tbody>
-            </table>
+            /* Force background colors to appear when printing */
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+
+            body {
+                background: white !important;
+                font-family: 'Times New Roman', serif;
+            }
+
+            .print-header {
+                display: flex;
+                align-items: center;    /* vertically center logo & text */
+                justify-content: center;
+                gap: 15px;              /* space between logo and school name */
+            }
+
+            .print-header h1 {
+                margin: 0;
+                font-size: 22px;
+                font-family: 'Times New Roman';
+                color: #b18819;
+                font-weight: bold;
+            }
+
+            .print-header-row h1 {
+                display: flex;
+                text-align: center;
+                align-items: center;
+                font-size: 22px;
+                font-family: 'Times New Roman';
+                font-weight: normal;
+                color: #000;
+            }
+
+            .print-header img {
+                width: 60px;
+                height: 60px;
+            }
+
+            .info-box {
+                background: #ffffff;
+                padding: 18px 25px;
+                border-radius: 15px;
+                box-shadow: 0px 1px 6px #00000033;
+                margin-bottom: 20px;
+                font-size: 16px;
+            }
+
+            /* 2-Column Student Info Layout */
+            .info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                column-gap: 40px;
+                row-gap: 10px;
+            }
+
+            .info-item span {
+                font-weight: bold;
+            }
+
+            .info-item.course-row, .info-item.college-row {
+                grid-column: 1 / span 2 !important;
+                text-align: left !important;
+            }
+
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+                font-size: 15px;
+            }
+
+            .print-table thead th {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                border: 2px solid #000 !important;
+                border-bottom: 2px solid #000 !important;
+            }
+
+            /* Remove inner borders between header cells */
+            .print-table thead th:not(:first-child) {
+                border-left: none !important;
+            }
+            .print-table td {
+                background: #f7f7f7;
+                padding: 8px;
+                text-align: center;
+
+                border-left: 1px solid #ccc;
+                border-right: 1px solid #ccc;
+
+                /* Remove horizontal lines */
+                border-top: none !important;
+                border-bottom: none !important;
+            }
+
+            .print-table tbody tr:first-child td {
+                border-top: 2px solid #000 !important;
+            }
+                    }
+    </style>
+
+    <div class="print-form">
+
+        <!-- Header -->
+        <div class="print-header">
+                <img src="https://plm.edu.ph/assets/plm-logo.DLcRDINN.png" />
+                <h1>PAMANTASAN NG LUNGSOD NG MAYNILA</h1>
         </div>
-    `;
+        <div class="print-header">
+            <div class="print-header-row">     
+                <h1>Student Registration Form</h1>
+            </div>
+        </div>
 
-    container.style.display = "block"; // make visible for print
+        <!-- Student Info Box -->
+        <div class="info-box">
+            <div class="info-grid">
+
+                <div class="info-item">
+                    <span>Name:</span> ${data.header.full_name}
+                </div>
+
+                <div class="info-item">
+                    <span>Student ID:</span> ${data.header.student_id}
+                </div>
+
+                <div class="info-item">
+                    <span>Semester:</span> ${data.header.sem_id}
+                </div>
+                
+                <div class="info-item">
+                    <span>Student Type:</span> ${data.header.student_type}
+                </div>
+
+                <div class="info-item college-row">
+                    <span>College:</span> ${data.header.college}
+                </div> 
+
+                <div class="info-item course-row">
+                    <span>Course:</span> ${data.header.course}
+                </div>
+
+                <div class="info-item">
+                    <span>Year Level:</span> ${data.header.year_level}
+                </div>
+
+      
+                
+
+
+            </div>
+        </div>
+
+        <!-- Schedule Table -->
+        <table class="print-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Title</th>
+                    <th>Units</th>
+                    <th>Section</th>
+                    <th>Schedule</th>
+                    <th>Room</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${subjectRows}
+            </tbody>
+        </table>
+
+    </div>
+`;
+
+
     window.print();
-    container.style.display = "none"; // hide again
 }
 
 
