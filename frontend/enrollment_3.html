@@ -382,6 +382,19 @@
         .cancel-btn:hover { 
             background-color: #e2e6eb; 
         }
+
+
+        /* Hide everything except #printContainer when printing */
+    @media print {
+        body > *:not(#printContainer) {
+            display: none;
+        }
+        #printContainer {
+            display: block !important;
+            position: static !important;
+            width: 100%;
+        }
+    }
 </style>
 
 <body>
@@ -457,10 +470,20 @@
 
             </table>
 
-            <button class="print-btn" onclick="placeholder()">PRINT</button>
+           <!--<Original Code, review before deleting!
+                button class="print-btn" onclick="placeholder()">PRINT</button>-->
 
+            <form id="printForm" action = "/ADS_Final_Project/backend/enrollment/cursor-preview-regform.php"
+              method = "POST">
+            <!--
+                // HELP: Simulate session student_id and sem_id being fetched (integrate later)
+                // Reason: di ko alam kung paano nakasave yung data sa prev step(s)
+            -->
+                <input type="hidden" name="student_id" id="formStudentID">
+                <input type="hidden" name="sem_id" id="formSemID">
 
-
+                <button class="print-btn">PRINT</button> 
+        </form>
 
         </div>
 
@@ -477,7 +500,142 @@
         </div>
     </div>
 
+    <!-- PRINT SER CONTAINER -->
+    <div id="printContainer" style="display:none;"></div>
+
     <script>
+        // HELP: Simulated session student_id and sem_id being fetched (integrate later)
+        // Reason: di ko alam kung paano nakasave yung data sa prev step(s)
+        const studentId = "202336039";
+        const semId = "20252";
+        document.getElementById("formStudentID").value = studentId;
+        document.getElementById("formSemID").value = semId;
+
+    //event listener for page to load view data to table
+    document.addEventListener("DOMContentLoaded", function() {
+        // fetch function from db writes to page's table 
+        fetch("../backend/enrollment/cursor-view-enlisted-sched.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({student_id: studentId, sem_id: semId})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                const table = document.getElementById("scheduleTable");
+                // Clear existing sample rows except header
+                table.querySelectorAll("tr:not(:first-child)").forEach(r => r.remove());
+
+                data.data.forEach(row => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${row.sub_code}</td>
+                        <td>${row.section}</td>
+                        <td>${row.subject_title}</td>
+                        <td>${row.schedule_detail.split('\n').join('<br>')}</td>
+                    `;
+                    table.appendChild(tr);
+                });
+            } else {
+                console.error("Error fetching schedule:", data.message);
+            }
+        })
+        .catch(err => console.error("Fetch error:", err));
+    });
+
+
+//event listener for print button submission
+document.getElementById("printForm").addEventListener("submit", function(e) {
+    e.preventDefault(); // stop page from navigating
+
+    fetch(this.action, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            student_id: document.getElementById("formStudentID").value,
+            sem_id: document.getElementById("formSemID").value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            console.error("Error fetching regform data:", data.error);
+            return;
+        }
+        openPrintPreview(data);
+    })
+    .catch(err => console.error("Fetch error:", err));
+});
+
+// Function: create a print layout of SER form
+function openPrintPreview(data) {
+    const container = document.getElementById("printContainer");
+
+    // Combine schedules for same subject into a single row
+    const subjectsMap = {};
+    data.subjects.forEach(s => {
+        const key = s.sub_code + '|' + s.section;
+        if (!subjectsMap[key]) {
+            subjectsMap[key] = {
+                sub_code: s.sub_code,
+                subject_title: s.subject_title,
+                units: s.units,
+                section: s.section,
+                schedule: [],
+                rooms:new Set()
+            };
+        }
+        if (s.day_name) {
+            subjectsMap[key].schedule.push(`${s.day_name} ${s.time_start}–${s.time_end}`);
+        }
+        if (s.room) {
+            subjectsMap[key].rooms.add(s.room);
+        }
+    });
+
+    const subjectRows = Object.values(subjectsMap).map(s => `
+        <tr>
+            <td>${s.sub_code}</td>
+            <td>${s.subject_title}</td>
+            <td>${s.units}</td>
+            <td>${s.section}</td>
+            <td>${s.schedule.join(', ')}</td>
+            <td>${[...s.rooms].join(', ')}</td> <!-- Rooms displayed here -->
+        </tr>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="print-form">
+            <h2>PLM Registration Form</h2>
+            <p><strong>Name:</strong> ${data.header.full_name}</p>
+            <p><strong>Student ID:</strong> ${data.header.student_id}</p>
+            <p><strong>Course:</strong> ${data.header.course}</p>
+            <p><strong>Year Level:</strong> ${data.header.year_level}</p>
+            <p><strong>Semester:</strong> ${data.header.sem_id}</p>
+
+            <table border="1" cellspacing="0" cellpadding="5">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Title</th>
+                        <th>Units</th>
+                        <th>Section</th>
+                        <th>Schedule</th>
+                        <th>Room</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${subjectRows}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    container.style.display = "block"; // make visible for print
+    window.print();
+    container.style.display = "none"; // hide again
+}
+
 
     let currentStep = 3; // Changed from 1 to 3
 
@@ -543,8 +701,9 @@
         function openGrades() { window.location.href = "viewGrades.html"; }
         function openEnrollment() { window.location.href = "enrollment_1.html"; }
         function openSignoutPopup() { document.getElementById("signoutPopup").style.display = "flex"; }
-            function closePopup() { document.getElementById("signoutPopup").style.display = "none"; }    
-            function confirmSignout() { window.location.href = "logIn_wPass.html"; }     
+        function closePopup() { document.getElementById("signoutPopup").style.display = "none"; }    
+        function confirmSignout() { window.location.href = "logIn_wPass.html"; }    
+    
     </script>
 
 </body>
