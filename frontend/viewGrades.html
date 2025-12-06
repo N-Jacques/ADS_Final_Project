@@ -383,23 +383,33 @@ function loadGrades() {
 
     // If "All Years" is selected
     if (yearValue === "ALL") {
-        // Get ALL semesters from ALL years
-        semesterIDs = [].concat(
-            semesterMap["2324"],
-            semesterMap["2425"],
-            semesterMap["2526"]
-        );
-    } else {
-        const allSemesters = semesterMap[yearValue];
-        
-        // If no specific semester selected, get ALL semesters for that year
-        if (!semValue) {
-            semesterIDs = allSemesters;
-        } else {
-            // Get specific semester only
-            semesterIDs = [allSemesters[parseInt(semValue) - 1]];
-        }
-    }
+                const availableYears = ["2324", "2425", "2526"];
+                
+                availableYears.forEach(year => {
+                    const yearSemesters = semesterMap[year];
+                    
+                    if (!semValue) {
+                        // If "All Semesters", take everything for this year
+                        semesterIDs = semesterIDs.concat(yearSemesters);
+                    } else {
+                        // If specific sem, take only that index (0=1st, 1=2nd, 2=Mid)
+                        const semIndex = parseInt(semValue) - 1;
+                        if (yearSemesters[semIndex]) {
+                            semesterIDs.push(yearSemesters[semIndex]);
+                        }
+                    }
+                });
+            } else {
+                // Specific Year Logic
+                const allSemesters = semesterMap[yearValue];
+                
+                if (!semValue) {
+                    semesterIDs = allSemesters;
+                } else {
+                    semesterIDs = [allSemesters[parseInt(semValue) - 1]];
+                }
+            }
+
 
     // Use POST for cleaner AJAX request
     const formData = new FormData();
