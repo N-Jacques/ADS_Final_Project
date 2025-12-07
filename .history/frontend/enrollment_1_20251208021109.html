@@ -450,13 +450,15 @@
             <img src="https://plm.edu.ph/assets/plm-logo.DLcRDINN.png">
             <p>PAMANTASAN NG LUNGSOD NG MAYNILA</p>
         </div>
+
         <div class="tabs-group">
             <button class="tabs-btn" onclick="openProfile()">Student Profile</button>
             <button class="tabs-btn" onclick="openGrades()">View Grades</button>
             <button class="tabs-btn" style="color:#b18819;" onclick="openEnrollment()">Enrollment</button>
-            <button class="tabs-btn" onclick="showPopup('signOutPopup')">Sign Out</button>
+            <button class="tabs-btn" onclick="openSignoutPopup()">Sign Out</button>
         </div>
     </div>
+
 
     <div class="name-panel">
         <span class="clickable-name" id="studentName">Loading...</span>
@@ -464,118 +466,151 @@
         <input type="hidden" id="studentId" value=""> 
     </div>
 
+
     <div class="container">
-        <!-- Progress Bar -->
+
         <div class="progress-container">
-            <div class="line-bg"></div>
-            <div class="line-fill" id="line"></div>
-            <div class="steps">
-                <div class="step active" id="step1"><div class="circle">1</div><div class="label">SUBJECT ENLISTMENT</div></div>
-                <div class="step" id="step2"><div class="circle">2</div><div class="label">CONFIRM ENROLLMENT</div></div>
-                <div class="step" id="step3"><div class="circle">3</div><div class="label">VIEW SCHEDULE</div></div>
+                <div class="line-bg"></div>
+                <div class="line-fill" id="line"></div>
+
+                <div class="steps">
+                    <div class="step" id="step1">
+                        <div class="circle">1</div>
+                        <div class="label">SUBJECT ENLISTMENT</div>
+                    </div>
+
+                    <div class="step" id="step2">
+                        <div class="circle">2</div>
+                        <div class="label">CONFIRM ENROLLMENT</div>
+                    </div>
+
+                    <div class="step" id="step3">
+                        <div class="circle">3</div>
+                        <div class="label">VIEW SCHEDULE</div>
+                    </div>
+                </div>
             </div>
-        </div>
 
         <h3 style="text-align:center;">SUBJECTS FOR APPROVAL</h3>
+
         <div class="table-responsive">
             <table id="approvalTable">
                 <thead>
                     <tr>
                         <th>Action</th>
-                        <th>Code</th>
+                        <th>Subject Code</th>
                         <th>Section</th>
                         <th>Title</th>
                         <th>Units</th>
                         <th>Schedule</th>
                     </tr>
                 </thead>
+
                 <tbody id="approvalTableBody">
-                    <tr><td colspan="6" style="padding:20px; color:#777;">No subjects added.</td></tr>
+                    <tr>
+                        <td colspan="6" style="padding:20px; color:#777;">No subjects added to schedule.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
 
+
         <div class="search-row">
+
             <div class="search-group">
-                <input id="searchInput" class="search-input" type="text" placeholder="Search Code/Title..." onkeyup="if(event.key === 'Enter') performSearch()">
-                <button class="search-button" onclick="performSearch()"><img src="../assets/searchLogoBtn.png" style="width:20px"></button>
+                <input id="searchInput" class="search-input" type="text" placeholder="Search Subject..." onkeyup="if(event.key === 'Enter') performSearch()">
+
+                <button class="search-button" onclick="performSearch()">
+                    <img src="../assets/searchLogoBtn.png">
+                </button>
+
                 <select id="subtypeSelect" onchange="performSearch()">
                     <option value="MAJ">Major</option>
                     <option value="MIN">Minor</option>
                 </select>
+
+                <div class="sem-static">
+                    Semester: <span id="semLabel">2025-2</span>
+                </div>
+
                 <input type="hidden" id="semesterId" value="20252">
             </div>
-            <p id="statusNotice" style="color:#BF1A1A; font-weight:bold; font-size:14px; margin:0;">
-                NOTICE: Enrollment is not final until confirmed.
-            </p>
+
+            <div class="noticeContainer">
+                <p id="statusNotice" style="margin:0;">
+                    NOTICE: You are not yet enrolled unless your subjects are already approved by the college department
+                </p>
+            </div>
+
         </div>
 
+
         <h3>AVAILABLE SUBJECTS</h3>
+
         <div class="table-responsive">
             <table id="resultsTable">
                 <thead>
                     <tr>
                         <th>Action</th>
-                        <th>Code</th>
+                        <th>Subject Code</th>
                         <th>Section</th>
                         <th>Title</th>
                         <th>Units</th>
                         <th>Schedule</th>
                         <th>Room</th>
-                        <th>Slots</th>
+                        <th>Available Slots</th>
                     </tr>
                 </thead>
+
                 <tbody id="resultsTableBody">
-                    <tr><td colspan="8" style="padding:30px; color:#777;">Search for subjects above.</td></tr>
+                    <tr>
+                        <td colspan="8" style="padding:30px; color:#777;">Search for available subjects above.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
 
-        <button class="next-btn" onclick="goToConfirmation()">NEXT</button>
+
+        <button class="next-btn" onclick="confirmEnlistment()">NEXT</button>
+
     </div>
 
-    <!-- Sign Out Popup -->
+
     <div class="popup-overlay" id="signOutPopup">
         <div class="popup-box">
             <h3>Confirm Sign Out</h3>
             <p>Are you sure you want to sign out?</p>
-            <button class="popup-btn signout-btn" onclick="window.location.href = 'logIn_wPass.html'">SIGN OUT</button>
-            <button class="popup-btn cancel-btn" onclick="document.getElementById('signOutPopup').style.display='none'">CANCEL</button>
+
+            <button class="popup-btn signout-btn" onclick="window.location.href = 'logIn_wPass.html'";>SIGN OUT</button>
+            <button class="popup-btn cancel-btn" onclick="hidePopup('signOutPopup')">CANCEL</button>
         </div>
     </div>
 
+
+
     <script>
+
         let STUDENT_ID = "";
         let enlistedSubjects = [];
-        let passedSubjects = [];
+        let isEnrolled = false;
+        let passedSubjects = []; 
 
-        // 1. Init
-        document.addEventListener("DOMContentLoaded", () => {
-            loadDraft();
-            loadStudentProfile().then(() => {
-                checkEnrollmentStatus();
-                loadPassedSubjects();
-            });
-        });
 
-        // LOAD DRAFT FROM LOCALSTORAGE (Handles Back Button)
-        function loadDraft() {
-            const stored = localStorage.getItem("enlistedSubjects");
-            if (stored) {
-                try {
-                    enlistedSubjects = JSON.parse(stored);
-                } catch(e) {
-                    enlistedSubjects = [];
-                }
-            }
-            renderEnlistedTable();
-        }
+        /******************************
+         * HELPERS
+         ******************************/
+        const showMessage = msg => alert(msg);
+        function showPopup(id) { document.getElementById(id).style.display = "flex"; }
+        function hidePopup(id) { document.getElementById(id).style.display = "none"; }
 
-        function saveDraft() {
+        // Local Storage Helper
+        function saveLocal() {
             localStorage.setItem("enlistedSubjects", JSON.stringify(enlistedSubjects));
         }
 
-        // 2. Fetch Profile
+        /******************************
+         * LOAD STUDENT PROFILE
+         ******************************/
         function loadStudentProfile() {
             return fetch('../backend/login/getStudentInfo.php')
                 .then(res => res.json())
@@ -586,39 +621,36 @@
                         throw new Error("No session");
                     }
                     STUDENT_ID = data.student_id;
-                    localStorage.setItem("student_id", STUDENT_ID);
                     
-                    const name = `${data.lastname}, ${data.firstname}`;
-                    document.getElementById('studentName').innerText = name.toUpperCase();
+                    localStorage.setItem("student_id", STUDENT_ID);
+
+                    const fullName = `${data.lastname}, ${data.firstname} ${data.middlename || ''}`;
+                    document.getElementById('studentName').innerText = fullName.toUpperCase();
                     document.getElementById('displayStudentId').innerText = `(${STUDENT_ID})`;
+                    document.getElementById('studentId').value = STUDENT_ID;
                 });
         }
 
+
+        /******************************
+         * LOAD PASSED SUBS
+         ******************************/
         function loadPassedSubjects() {
-            if(!STUDENT_ID) return;
+            if(!STUDENT_ID) return; 
+
             fetch(`../backend/enrollment/taken_subjects.php?student_id=${STUDENT_ID}`)
-                .then(res => res.json())
-                .then(data => { if(data.success) passedSubjects = data.passed_subjects; });
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    passedSubjects = data.passed_subjects;
+                }
+            })
+            .catch(e => console.error("Failed to load passed subjects", e));
         }
 
-        // --- CHECK IF ALREADY ENROLLED ---
-        function checkEnrollmentStatus() {
-            const sem = document.getElementById("semesterId").value;
-            if(!STUDENT_ID) return;
-            
-            // Note: Changed filename to check_enrollment_status.php as requested
-            fetch(`../backend/enrollment/check_enrollment_status.php?student_id=${STUDENT_ID}&sem_id=${sem}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.is_enrolled) {
-                        // Redirect STRAIGHT to Schedule View (Step 3) if already official
-                        window.location.replace("enrollment_3.html");
-                    }
-                })
-                .catch(err => console.error("Status check error:", err));
-        }
-
-        // 3. Search & Add
+        /******************************
+         * SEARCH
+         ******************************/
         function performSearch() {
             const formData = new FormData();
             formData.append("query", document.getElementById("searchInput").value);
@@ -630,9 +662,9 @@
                 .then(html => {
                     const tbody = document.getElementById("resultsTableBody");
                     tbody.innerHTML = html;
-                    
-                    // Mark passed subjects as disabled
-                    tbody.querySelectorAll('button').forEach(btn => {
+
+                    const buttons = tbody.querySelectorAll('button');
+                    buttons.forEach(btn => {
                         const code = btn.getAttribute('data-code');
                         if (passedSubjects.includes(code)) {
                             btn.innerText = "PASSED";
@@ -644,96 +676,214 @@
                 });
         }
 
+
+        /******************************
+         * ADD SUBJECT
+         ******************************/
         function addSubject(btn) {
+            if (isEnrolled) return showMessage("You are already enrolled.");
+
             const sub = {
                 code: btn.getAttribute('data-code'),
-                section: btn.getAttribute('data-section'), 
+                section: btn.getAttribute('data-section') || "TBA", 
                 title: btn.getAttribute('data-title'),
                 units: btn.getAttribute('data-units'),
                 schedule: btn.getAttribute('data-schedule'),
                 slots: parseInt(btn.getAttribute('data-slots'))
             };
 
-            if (enlistedSubjects.some(s => s.code === sub.code)) {
-                return alert("Subject already in list.");
+            if (passedSubjects.includes(sub.code)) {
+                return showMessage(`Cannot Enlist: You have already passed ${sub.code} (${sub.title}).`);
             }
-            if (sub.slots <= 0) {
-                return alert("No slots available.");
-            }
-            if (findConflict(sub)) {
-                return alert("Schedule conflict detected with another subject.");
-            }
+
+            if (enlistedSubjects.some(s => s.code === sub.code))
+                return showMessage("Subject already added.");
+
+            if (sub.slots <= 0)
+                return showMessage("No slots available.");
+
+            const conflict = findConflict(sub, enlistedSubjects);
+            if (conflict)
+                return showMessage(`Schedule conflict with ${conflict.code}`);
 
             enlistedSubjects.push(sub);
-            saveDraft();
+            saveLocal(); // Persist to Local Storage
             renderEnlistedTable();
-            alert("Subject " + sub.code + " (" + sub.section + ") added.");
         }
 
-        function findConflict(newSub) {
-            const parse = (schedStr) => {
-                if(!schedStr) return [];
-                return schedStr.split(" / ").map(chunk => {
-                    const parts = chunk.trim().split(" ");
-                    if(parts.length < 2) return null;
+
+        /******************************
+         * CONFLICT CHECK
+         ******************************/
+        function findConflict(newSub, list) {
+            if(!newSub.schedule) return null;
+
+            const parse = (sched) =>
+                sched.split(" / ").map(p => {
+                    const parts = p.trim().split(" ");
+                    if(parts.length < 2) return { day: "", start: 0, end: 0 };
+                    
                     const day = parts[0];
-                    const [start, end] = parts[1].split("-").map(t => parseInt(t.replace(":","")));
+                    const timePart = parts[1];
+                    const [start, end] = timePart.split("-").map(t => parseInt(t.replace(":", "")));
                     return { day, start, end };
-                }).filter(Boolean);
-            };
+                });
 
             const newTimes = parse(newSub.schedule);
-            
-            for (let existing of enlistedSubjects) {
-                const exTimes = parse(existing.schedule);
-                for (let n of newTimes) {
-                    for (let e of exTimes) {
-                        if (n.day === e.day && n.start < e.end && n.end > e.start) return true;
-                    }
-                }
+
+            for (let ex of list) {
+                if(!ex.schedule) continue;
+                let exTimes = parse(ex.schedule);
+
+                for (let n of newTimes)
+                    for (let e of exTimes)
+                        if (n.day === e.day && n.start < e.end && n.end > e.start)
+                            return ex;
             }
-            return false;
+
+            return null;
         }
 
-        function removeSubject(idx) {
-            enlistedSubjects.splice(idx, 1);
-            saveDraft();
+
+        /******************************
+         * REMOVE + RENDER
+         ******************************/
+        function removeSubject(index) {
+            if (isEnrolled) return;
+            enlistedSubjects.splice(index, 1);
+            saveLocal(); // Persist to Local Storage
             renderEnlistedTable();
         }
 
         function renderEnlistedTable() {
             const tbody = document.getElementById("approvalTableBody");
             tbody.innerHTML = "";
+
             if (enlistedSubjects.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='6' style='padding:20px; color:#777;'>No subjects added.</td></tr>";
+                tbody.innerHTML =
+                    `<tr><td colspan="6" style="padding:20px; color:#777;">No subjects added to schedule.</td></tr>`;
                 return;
             }
-            enlistedSubjects.forEach((s, i) => {
+
+            enlistedSubjects.forEach((sub, index) => {
                 tbody.innerHTML += `
                     <tr>
-                        <td><button class="btn-remove" onclick="removeSubject(${i})">REMOVE</button></td>
-                        <td>${s.code}</td>
-                        <td>${s.section}</td>
-                        <td>${s.title}</td>
-                        <td>${s.units}</td>
-                        <td>${s.schedule}</td>
+                        <td><button class="btn-remove" onclick="removeSubject(${index})">REMOVE</button></td>
+                        <td>${sub.code}</td>
+                        <td>${sub.section}</td>
+                        <td>${sub.title}</td>
+                        <td>${sub.units}</td>
+                        <td>${sub.schedule}</td>
                     </tr>
                 `;
             });
         }
 
-        // NAVIGATION TO PAGE 2
-        function goToConfirmation() {
-            if (enlistedSubjects.length === 0) return alert("Please enlist at least one subject.");
-            saveDraft(); 
+
+        /******************************
+         * CONFIRM ENLISTMENT (NOW MOVES TO PAGE 2)
+         ******************************/
+       function confirmEnlistment() {
+            if (isEnrolled) return showMessage("Already enrolled.");
+            if (enlistedSubjects.length === 0) return showMessage("Schedule is empty.");
+            
+            // We removed the fetch() call here.
+            // We just save to localStorage (already handled by saveLocal in add/remove, but good to ensure)
+            saveLocal();
             localStorage.setItem("student_id", STUDENT_ID); 
+            
+            // Redirect to Review Page
             window.location.href = "enrollment_2.html";
         }
 
+
+        /******************************
+         * LOAD STATUS
+         ******************************/
+        function loadExistingEnrollment() {
+            if(!STUDENT_ID) return; 
+
+            const sem = document.getElementById("semesterId").value;
+            if (!sem) return;
+
+            fetch(`../backend/enrollment/get_enlisted.php?student_id=${STUDENT_ID}&sem_id=${sem}`)
+                .then(res => res.json())
+                .then(data => {
+                    isEnrolled = data.is_enrolled;
+                    const notice = document.getElementById("statusNotice");
+
+                    if (isEnrolled) {
+                        // If already enrolled, force redirect to Page 2
+                         window.location.replace("enrollment_2.html");
+                        return;
+                    } 
+                    
+                    notice.innerText = "NOTICE: You are not yet enrolled unless your subjects are already approved by the college department.";
+                    notice.style.color = "#BF1A1A";
+                    updateProgressBar(1);
+
+                    // We do NOT clear enlistedSubjects here, relying on LocalStorage
+                });
+        }
+
+
+        /******************************
+         * PROGRESS BAR UPDATE
+         ******************************/
+        function updateProgressBar(step) {
+            document.querySelectorAll(".step")
+                .forEach(s => s.classList.remove("active", "completed"));
+
+            if (step >= 1) document.getElementById("step1").classList.add(step === 1 ? "active" : "completed");
+            if (step >= 2) document.getElementById("step2").classList.add(step === 2 ? "active" : "completed");
+            if (step >= 3) document.getElementById("step3").classList.add(step === 3 ? "active" : "completed");
+
+            const line = document.getElementById("line");
+            if (step === 1) line.style.width = "0%";
+            if (step === 2) line.style.width = "calc(50% - 70px)";
+            if (step === 3) line.style.width = "calc(100% - 140px)";
+        }
+
+
+        /******************************
+         * NAVIGATION
+         ******************************/
         function openProfile() { window.location.href = "studentProfile.html"; }
         function openGrades() { window.location.href = "viewGrades.html"; }
         function openEnrollment() { window.location.href = "enrollment_1.html"; }
-        function showPopup(id) { document.getElementById(id).style.display = 'flex'; }
+        function openSignoutPopup() { showPopup("signOutPopup"); }
+
+        // Load Draft Logic
+        function initDraftSubjects() {
+            const stored = localStorage.getItem("enlistedSubjects");
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed)) {
+                        enlistedSubjects = parsed;
+                        renderEnlistedTable();
+                    }
+                } catch(e) {
+                    console.error("Failed to load draft subjects", e);
+                }
+            }
+        }
+
+        // INITIAL LOAD
+        document.addEventListener("DOMContentLoaded", () => {
+            initDraftSubjects(); // Load from LocalStorage immediately
+
+            loadStudentProfile()
+                .then(() => {
+                    loadExistingEnrollment();
+                    loadPassedSubjects();
+                })
+                .catch(err => {
+                    console.error("Initialization failed:", err);
+                });
+        });
+
     </script>
+
 </body>
 </html>

@@ -388,7 +388,7 @@
 
     <!-- Hidden inputs for student_id and sem_id -->
     <input type="hidden" id="student_id">
-    <input type="hidden" id="sem_id" value="20252">
+    <input type="hidden" id="sem_id" value="20251">
 
     <!-- HEADER -->
     <div class="header">
@@ -404,10 +404,10 @@
     </div>
 
     <div class="name-panel">
-        <span class="clickable-name" onclick="openProfile()" id="displayName">
-            Loading...
+        <span class="clickable-name" onclick="openProfile()">
+            Dela Cruz, Juan A.
         </span>
-        <span class="student-number" id="displayNum"></span>
+        <span class="student-number">(202312345)</span>
     </div>
         
     <!-- MAIN PANEL -->
@@ -435,21 +435,15 @@
         <h2>CONFIRMATION OF ENLISTED SUBJECTS</h2>
 
         <table id="confirmationTable">
-            <thead>
-                <tr>
-                    <th>SUBJECT CODE</th>
-                    <th>SECTION</th>
-                    <th>SUBJECT TITLE</th>
-                    <th>UNITS</th>
-                    <th>SCHEDULE</th> 
-                </tr>
-            </thead>
-            <tbody id="confirmationBody">
-                <!-- Rows will be inserted here via JS -->
-            </tbody>
+            <tr>
+                <th>SUBJECT CODE</th>
+                <th>SECTION</th>
+                <th>SUBJECT TITLE</th>
+                <th>SCHEDULE</th> 
+            </tr>
         </table>
 
-        <button class="confirm-btn" onclick="submitEnlistment()">CONFIRM ENLISTMENT</button>
+        <button class="confirm-btn" onclick="nextStep()">CONFIRM ENLISTMENT</button>
         <button class="back-btn" onclick="prevStep()">BACK</button>
     </div>
 
@@ -465,143 +459,106 @@
     </div>
 
 <script>
-    // INITIAL LOAD
-    document.addEventListener("DOMContentLoaded", function () {
-        // 1. Populate table from LocalStorage draft immediately
-        loadEnlistedSubjects();
+document.addEventListener("DOMContentLoaded", function () {
+    // ✅ Set student_id from localStorage (or fallback)
+    const studentInput = document.getElementById("student_id");
+    const savedStudentId = localStorage.getItem("student_id");
+    if (savedStudentId) {
+        studentInput.value = savedStudentId;
+        document.querySelector(".student-number").textContent = `(${savedStudentId})`;
+    } else {
+        // fallback (make sure this exists in DB)
+        studentInput.value = "202250051"; 
+        document.querySelector(".student-number").textContent = "(202250051)";
+    }
 
-        // 2. Fetch Student Profile from Server (Source of Truth)
-        loadStudentProfile();
+    // Populate subjects table from localStorage
+    const subjects = JSON.parse(localStorage.getItem("enlistedSubjects")) || [];
+    const table = document.getElementById("confirmationTable");
 
-        updateProgressBar();
+    subjects.forEach(sub => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${sub.code}</td>
+            <td>${sub.section}</td>
+            <td>${sub.title}</td>
+            <td>${sub.schedule}</td>
+        `;
+        table.appendChild(row);
+    });
+});
+
+let currentStep = 2;
+
+function updateProgressBar() {
+    document.querySelectorAll(".step").forEach(s => {
+        s.classList.remove("active", "completed");
     });
 
-    let currentStep = 2;
+    if (currentStep >= 1)
+        document.getElementById("step1").classList.add(currentStep === 1 ? "active" : "completed");
+    if (currentStep >= 2)
+        document.getElementById("step2").classList.add(currentStep === 2 ? "active" : "completed");
+    if (currentStep >= 3)
+        document.getElementById("step3").classList.add(currentStep === 3 ? "active" : "completed");
 
-    function updateProgressBar() {
-        document.querySelectorAll(".step").forEach(s => {
-            s.classList.remove("active", "completed");
+    const line = document.getElementById("line");
+    line.style.width = currentStep === 1 ? "0%" : currentStep === 2 ? "calc(50% - 50px)" : "calc(100% - 100px)";
+}
+
+updateProgressBar();
+
+function prevStep() {  
+    window.location.href = "enrollment_1.html";  
+}
+
+async function nextStep() {
+    const student_id = document.getElementById("student_id").value;
+    const sem_id = document.getElementById("sem_id").value;
+    const subjects = JSON.parse(localStorage.getItem("enlistedSubjects")) || [];
+
+    if (!student_id) {
+        alert("Student ID is missing!");
+        return;
+    }
+
+    if (subjects.length === 0) {
+        alert("No subjects enlisted.");
+        return;
+    }
+
+    const payload = { student_id, sem_id, subjects };
+    console.log("SENDING PAYLOAD:", payload);
+
+    try {
+        const response = await fetch("http://localhost/ADS_FINAL_PROJECT/backend/enrollment/final_register.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
         });
 
-        if (currentStep >= 1) document.getElementById("step1").classList.add(currentStep === 1 ? "active" : "completed");
-        if (currentStep >= 2) document.getElementById("step2").classList.add(currentStep === 2 ? "active" : "completed");
-        if (currentStep >= 3) document.getElementById("step3").classList.add(currentStep === 3 ? "active" : "completed");
+        const result = await response.json();
+        console.log("SERVER RESPONSE:", result);
 
-        const line = document.getElementById("line");
-        line.style.width = "calc(50% - 50px)";
-    }
-
-    function prevStep() {  
-        window.location.href = "enrollment_1.html";  
-    }
-
-    // MATCHING LOGIC FROM ENROLLMENT_1.HTML
-    function loadStudentProfile() {
-        fetch('../backend/login/getStudentInfo.php')
-            .then(res => res.json())
-            .then(data => {
-                // Check valid session
-                if (!data.student_id && !data.success) {
-                    alert("Session expired. Please log in.");
-                    window.location.href = 'logIn_wPass.html';
-                    throw new Error("No session");
-                }
-
-                // Consistency: Save to local storage for persistence
-                const studentId = data.student_id;
-                localStorage.setItem("student_id", studentId);
-
-                // Construct Name: Last, First Middle
-                const fullName = `${data.lastname}, ${data.firstname} ${data.middlename || ''}`;
-
-                // Update UI Elements
-                document.getElementById('displayName').innerText = fullName.toUpperCase();
-                document.getElementById('displayNum').textContent = `(${studentId})`;
-                document.getElementById('student_id').value = studentId;
-            })
-            .catch(err => {
-                console.error("Profile load failed:", err);
-            });
-    }
-
-    function loadEnlistedSubjects() {
-        const subjects = JSON.parse(localStorage.getItem("enlistedSubjects")) || [];
-        const tbody = document.getElementById("confirmationBody");
-        
-        tbody.innerHTML = ""; // Clear existing rows
-
-        if (subjects.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5'>No subjects enlisted.</td></tr>";
+        if (result.success) {
+            alert("Enrollment successful!");
+            window.location.href = "enrollment_3.html";
         } else {
-            subjects.forEach(sub => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${sub.code}</td>
-                    <td>${sub.section}</td>
-                    <td>${sub.title}</td>
-                    <td>${sub.units}</td>
-                    <td>${sub.schedule}</td>
-                `;
-                tbody.appendChild(row);
-            });
+            alert("ERROR: " + result.error);
         }
+    } catch (error) {
+        console.error("REQUEST FAILED:", error);
+        alert("Failed to connect to the server.");
     }
+}
 
-    async function submitEnlistment() {
-        const student_id = document.getElementById("student_id").value;
-        const sem_id = document.getElementById("sem_id").value;
-        const subjects = JSON.parse(localStorage.getItem("enlistedSubjects")) || [];
+function openProfile() { window.location.href = "studentProfile.html"; }
+function openGrades() { window.location.href = "viewGrades.html"; }
+function openEnrollment() { window.location.href = "enrollment_1.html"; }
 
-        if (!student_id || subjects.length === 0) {
-            alert("Cannot process: Missing student ID or subject list.");
-            return;
-        }
-
-        if(!confirm("Are you sure you want to finalize your enrollment? This action cannot be undone.")) {
-            return;
-        }
-
-        const payload = { student_id, sem_id, subjects };
-
-        try {
-            const response = await fetch("../backend/enrollment/confirm_enlistment.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert("Enrollment successful!");
-                
-                // IMPORTANT: We do NOT clear localStorage here.
-                // This ensures that if the user hits Back, they still see their subjects
-                // instead of a blank screen. The enrollment is now final in the DB.
-                
-                window.location.href = "enrollment_3.html";
-            } else {
-                // If the error is that they are already enlisted (e.g. they clicked confirm twice)
-                // we treat it as a success and move them forward.
-                if(result.error && result.error.toLowerCase().includes("already enlisted")) {
-                     window.location.href = "enrollment_3.html";
-                } else {
-                    alert("ERROR: " + result.error);
-                }
-            }
-        } catch (error) {
-            console.error("REQUEST FAILED:", error);
-            alert("Failed to connect to the server.");
-        }
-    }
-
-    function openProfile() { window.location.href = "studentProfile.html"; }
-    function openGrades() { window.location.href = "viewGrades.html"; }
-    function openEnrollment() { window.location.href = "enrollment_1.html"; }
-
-    function openSignoutPopup() { document.getElementById("signoutPopup").style.display = "flex"; }
-    function closePopup() { document.getElementById("signoutPopup").style.display = "none"; }
-    function confirmSignout() { window.location.href = "logIn_wPass.html"; }
+function openSignoutPopup() { document.getElementById("signoutPopup").style.display = "flex"; }
+function closePopup() { document.getElementById("signoutPopup").style.display = "none"; }
+function confirmSignout() { window.location.href = "logIn_wPass.html"; }
 </script>
 
 </body>

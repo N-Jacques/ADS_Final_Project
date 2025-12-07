@@ -292,6 +292,7 @@
         <p>PAMANTASAN NG LUNGSOD NG MAYNILA</p>  
 
         <div class="tabsBtn">
+            <button class="tabs-btn" onclick="openDashboard()">Dashboard</button>
             <button class="tabs-btn" onclick="openProfile()">Student Profile</button>
             <button style="color:#b18819" class="tabs-btn" onclick="openGrades()">View Grades</button>
             <button class="tabs-btn" onclick="openEnrollment()">Enrollment</button>
@@ -446,6 +447,7 @@ function filterGrades() {
 /* ============================================
    NAVIGATION FUNCTIONS
 ============================================ */
+function openDashboard() { window.location.href = "dashboard.html"; }
 function openProfile() { window.location.href = "studentProfile.html"; }
 function openGrades() { window.location.href = "viewGrades.html"; }
 function openEnrollment() { window.location.href = "enrollment_1.html"; }

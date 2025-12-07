@@ -404,10 +404,9 @@
     </div>
 
     <div class="name-panel">
-        <span class="clickable-name" onclick="openProfile()" id="displayName">
-            Loading...
-        </span>
-        <span class="student-number" id="displayNum"></span>
+        <span class="clickable-name" id="studentName">Loading...</span>
+        <span class="student-number" id="displayStudentId"></span>
+        <input type="hidden" id="studentId" value=""> 
     </div>
         
     <!-- MAIN PANEL -->
@@ -465,70 +464,24 @@
     </div>
 
 <script>
-    // INITIAL LOAD
     document.addEventListener("DOMContentLoaded", function () {
-        // 1. Populate table from LocalStorage draft immediately
-        loadEnlistedSubjects();
+        // 1. Get Student Info from LocalStorage
+        const savedStudentId = localStorage.getItem("student_id");
+        if (savedStudentId) {
+            document.getElementById("student_id").value = savedStudentId;
+            document.getElementById("displayNum").textContent = `(${savedStudentId})`;
+            
+            // NOTE: In a real app you might want to fetch the Name here again
+            // or save the name in localStorage in enrollment_1.html too.
+            document.getElementById("displayName").textContent = "STUDENT PROFILE"; 
+        } else {
+            alert("Session missing. Redirecting to login.");
+            // window.location.href = "logIn_wPass.html";
+        }
 
-        // 2. Fetch Student Profile from Server (Source of Truth)
-        loadStudentProfile();
-
-        updateProgressBar();
-    });
-
-    let currentStep = 2;
-
-    function updateProgressBar() {
-        document.querySelectorAll(".step").forEach(s => {
-            s.classList.remove("active", "completed");
-        });
-
-        if (currentStep >= 1) document.getElementById("step1").classList.add(currentStep === 1 ? "active" : "completed");
-        if (currentStep >= 2) document.getElementById("step2").classList.add(currentStep === 2 ? "active" : "completed");
-        if (currentStep >= 3) document.getElementById("step3").classList.add(currentStep === 3 ? "active" : "completed");
-
-        const line = document.getElementById("line");
-        line.style.width = "calc(50% - 50px)";
-    }
-
-    function prevStep() {  
-        window.location.href = "enrollment_1.html";  
-    }
-
-    // MATCHING LOGIC FROM ENROLLMENT_1.HTML
-    function loadStudentProfile() {
-        fetch('../backend/login/getStudentInfo.php')
-            .then(res => res.json())
-            .then(data => {
-                // Check valid session
-                if (!data.student_id && !data.success) {
-                    alert("Session expired. Please log in.");
-                    window.location.href = 'logIn_wPass.html';
-                    throw new Error("No session");
-                }
-
-                // Consistency: Save to local storage for persistence
-                const studentId = data.student_id;
-                localStorage.setItem("student_id", studentId);
-
-                // Construct Name: Last, First Middle
-                const fullName = `${data.lastname}, ${data.firstname} ${data.middlename || ''}`;
-
-                // Update UI Elements
-                document.getElementById('displayName').innerText = fullName.toUpperCase();
-                document.getElementById('displayNum').textContent = `(${studentId})`;
-                document.getElementById('student_id').value = studentId;
-            })
-            .catch(err => {
-                console.error("Profile load failed:", err);
-            });
-    }
-
-    function loadEnlistedSubjects() {
+        // 2. Populate table from LocalStorage
         const subjects = JSON.parse(localStorage.getItem("enlistedSubjects")) || [];
         const tbody = document.getElementById("confirmationBody");
-        
-        tbody.innerHTML = ""; // Clear existing rows
 
         if (subjects.length === 0) {
             tbody.innerHTML = "<tr><td colspan='5'>No subjects enlisted.</td></tr>";
@@ -545,6 +498,27 @@
                 tbody.appendChild(row);
             });
         }
+
+        updateProgressBar();
+    });
+
+    let currentStep = 2;
+
+    function updateProgressBar() {
+        document.querySelectorAll(".step").forEach(s => {
+            s.classList.remove("active", "completed");
+        });
+
+        if (currentStep >= 1) document.getElementById("step1").classList.add(currentStep === 1 ? "active" : "completed");
+        if (currentStep >= 2) document.getElementById("step2").classList.add(currentStep === 2 ? "active" : "completed");
+        if (currentStep >= 3) document.getElementById("step3").classList.add(currentStep === 3 ? "active" : "completed");
+
+        const line = document.getElementById("line");
+        line.style.width = "calc(50% - 70px)";
+    }
+
+    function prevStep() {  
+        window.location.href = "enrollment_1.html";  
     }
 
     async function submitEnlistment() {
