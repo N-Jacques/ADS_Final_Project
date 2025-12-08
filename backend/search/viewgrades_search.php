@@ -56,28 +56,20 @@ if (!$rows) {
         $sem_id    = htmlspecialchars($row['sem_id']);
 
         // Determine remarks
-         $gradeVal = (float)$grade;
-
-        if ($gradeVal >= 1.00 && $gradeVal <= 3.00) {
+        if ($grade >= 1.00 && $grade <= 3.00) {
             $remarks = "Passed";
-            $color = "green"; 
-        } elseif ($gradeVal == 5.00) {
+        } elseif ($grade == 5.00) {
             $remarks = "Failed";
-            $color = "red"; 
         } else {
             $remarks = "-";
-            $color = "black"; 
         }
-        // --- NEW LOGIC END ---
 
-        // Output the row with the style applied to the remarks column
         echo "<tr data-semester-id='{$sem_id}'>
                 <td>{$sub_code}</td>
                 <td>{$sub_title}</td>
                 <td>{$grade}</td>
-                <td style='color: {$color}; font-weight: bold;'>{$remarks}</td>
+                <td>{$remarks}</td>
               </tr>";
     }
 }
-
 ?>
