@@ -13,6 +13,7 @@ if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'student') {
 }
 
 // 2. If not logged in, redirect immediately to the Login Page
-header("Location: frontend/logIn_wPass.html");
+// Note: Based on your directory listing, ensure the casing matches your file 'login_wPass.html'
+header("Location: frontend/login_wPass.html");
 exit();
 ?>
