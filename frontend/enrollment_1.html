@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Irregular Student Enrollment</title>
-    <link rel="icon" href="https://plm.edu.ph/assets/plm-logo.DLcRDINN.png" type="image/png">
+    <title>Student Enrollment</title>
 
     <style>
       
@@ -467,7 +466,7 @@
     </div>
 
     <div class="name-panel">
-        <span class="clickable-name" onclick="openProfile()" id="studentName">Loading...</span>
+        <span class="clickable-name" id="studentName">Loading...</span>
         <span class="student-number" id="displayStudentId"></span>
         <input type="hidden" id="studentId" value=""> 
     </div>
@@ -561,15 +560,24 @@
 
         // 1. Init
         document.addEventListener("DOMContentLoaded", () => {
-            loadDraft();
-            loadStudentProfile().then(() => {
-                checkEnrollmentStatus();
-                loadPassedSubjects();
-            });
+            initDraftSubjects(); 
+
+            // Initialize chain: Profile -> Check Status -> Load History -> Perform Default Search
+            loadStudentProfile()
+                .then(() => {
+                    checkEnrollmentStatus();
+                    return loadPassedSubjects(); // Wait for this...
+                })
+                .then(() => {
+                    performSearch(); // ...BEFORE running the search
+                })
+                .catch(err => {
+                    console.error("Initialization failed:", err);
+                });
         });
 
-        // LOAD DRAFT FROM LOCALSTORAGE (Handles Back Button)
-        function loadDraft() {
+        // LOAD DRAFT FROM LOCALSTORAGE
+        function initDraftSubjects() {
             const stored = localStorage.getItem("enlistedSubjects");
             if (stored) {
                 try {
