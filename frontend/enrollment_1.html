@@ -562,14 +562,14 @@
         document.addEventListener("DOMContentLoaded", () => {
             initDraftSubjects(); 
 
-            // Initialize chain: Profile -> Check Status -> Load History -> Perform Default Search
+            // Initialize chain: Profile 
             loadStudentProfile()
                 .then(() => {
                     checkEnrollmentStatus();
-                    return loadPassedSubjects(); // Wait for this...
+                    return loadPassedSubjects(); 
                 })
                 .then(() => {
-                    performSearch(); // ...BEFORE running the search
+                    performSearch(); 
                 })
                 .catch(err => {
                     console.error("Initialization failed:", err);
@@ -621,7 +621,6 @@
                 });
         }
 
-        // UPDATED: Now returns a promise so performSearch waits for it
         function loadPassedSubjects() {
             if(!STUDENT_ID) return Promise.resolve();
             return fetch(`../backend/enrollment/taken_subjects.php?student_id=${STUDENT_ID}`)
